@@ -71,18 +71,15 @@ export function getPubKeyPointerPda({
   return PublicKey.findProgramAddressSync([hash], programId)
 }
 
-export const pubKeyIdentityProvider = {
-  Discord: { discord: {} },
-  Farcaster: { farcaster: {} },
-  Github: { github: {} },
-  Google: { google: {} },
-  Solana: { solana: {} },
-  Telegram: { telegram: {} },
-  Website: { website: {} },
-  X: { x: {} }
+export enum PubKeyIdentityProvider {
+  Discord = 'Discord',
+  Farcaster = 'Farcaster',
+  Github = 'Github',
+  Google = 'Google',
+  Solana = 'Solana',
+  Telegram = 'Telegram',
+  X = 'X',
 }
-
-export type PubKeyIdentityProvider = typeof pubKeyIdentityProvider[keyof typeof pubKeyIdentityProvider]
 
 export interface PubKeyProfile {
   publicKey: PublicKey
