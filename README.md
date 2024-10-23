@@ -1,88 +1,143 @@
-# PubKey Protocol (PPL)
 
-This is a work in progress.
+*Step 1: Create a new branch*
 
-## Getting Started
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/en/) (v20 or higher)
-- [PNPM](https://pnpm.io/) (v8 or higher)
-- [Rust](https://www.rust-lang.org/)
-- [Anchor](https://www.anchor-lang.com/)
-- [Git](https://git-scm.com/)
-
-> [!TIP]
-> If you don't have PNPM installed, you can install it using `corepack`:
->
-> ```sh
-> corepack enable
-> corepack prepare pnpm@latest --activate
-> ```
-
-### Installation
-
-1. Clone the repository:
-
-```sh
-git clone https://github.com/pubkeyapp/pubkey-protocol
-cd pubkey-protocol
-pnpm install
+```
+bash
+git checkout -b username/add-community-description
 ```
 
-### Development
+*Step 2: Update Community struct*
 
-Start web app
+In `(link unavailable)` or your schema file, add an optional `description` field:
 
-```sh
-pnpm dev:web
+```
+use anchor_lang::prelude::*;
+
+#[account]
+pub struct Community {
+    // existing fields...
+    pub description: Option<String>,
+}
 ```
 
-### Build
+*Step 3: Update community_update instruction*
 
-Build web app
+In your instruction handler, add logic to update the `description` field:
 
-```sh
-pnpm build:web
+```
+use anchor_lang::prelude::*;
+
+pub fn community_update(ctx: Context<CommunityUpdate>, new_description: Option<String>) -> ProgramResult {
+    let community = &mut ctx.accounts.community;
+    community.description = new_description;
+    Ok(())
+}
+
+#[derive(Accounts)]
+pub struct CommunityUpdate<'info> {
+    #[account(mut)]
+    pub community: Account<'info, Community>,
+    // existing accounts...
+}
 ```
 
-Build the Anchor program
+*Step 4: Test the behavior*
 
-```sh
-pnpm build:anchor
+Create a test for the updated instruction:
+
+```
+use anchor_lang::prelude::*;
+
+#[test]
+fn test_community_update() {
+    let mut community = Community {
+        // existing fields...
+        description: Some("Initial Description".to_string()),
+    };
+    let new_description = Some("Updated Description".to_string());
+
+    let (mut banks_client, payer, recent_blockhash) = setup();
+
+    let tx = Transaction::new_with_payer(
+        &[
+            Instruction::new_with_borsh(
+                // program id...
+                &community_update(
+                    CommunityUpdate {
+                        community: community.to_account_info(),
+                        // existing accounts...
+                    },
+                    new_description,
+                ),
+                // existing accounts...
+            ),
+        ],
+        Some(&payer.pubkey()),
+    );
+
+    banks_client.process_transaction(tx).unwrap();
+
+    assert_eq!(community.description, new_description);
+}
 ```
 
-### Lint
+*Step 5: Update web UI components*
 
-Lint all projects
+Update the respective components to display and edit the `description` field:
 
-```sh
+1. `PubkeyProtocolUiCommunityHeader`
+2. `PubkeyProtocolUiCommunityGridItem`
+3. `PubkeyProtocolUiCommunityUpdateForm`
 
-pnpm lint
+Example (using React):
+```
+jsx
+import React from 'react';
+
+const CommunityHeader = ({ community }) => {
+    return (
+        <div>
+            {/* existing fields... */}
+            <p>Description: {community.description}</p>
+        </div>
+    );
+};
 ```
 
-### Test
+*Step 6: Update CLI sample data*
 
-Test all projects
+In your CLI code, add the `description` field to the sample data:
 
-```sh
-pnpm test
+```
+let mut community = Community {
+    // existing fields...
+    description: Some("Sample Description".to_string()),
+};
 ```
 
-To iterate on the `anchor` program using a local validator, this is the recommended workflow:
+*Step 7: Commit and push changes*
 
-Open this in one terminal:
-
-```shell
-pnpm anchor localnet
+```
+bash
+git add .
+git commit -m "Add community description field"
+git push origin username/add-community-description
 ```
 
-And this in another:
+*Step 8: Create PR against next branch*
 
-```shell
-pnpm anchor test --skip-deploy --skip-local-validator
-```
+Create a pull request on GitHub:
 
-## License
+Title: Add community description field
 
-MIT
+Body:
+
+This PR adds an optional description field to the Community struct, allowing authorities to update it using the community_update instruction.
+
+*Step 9: Verify GitHub Actions tests*
+
+Ensure all tests pass.
+
+
+
+
